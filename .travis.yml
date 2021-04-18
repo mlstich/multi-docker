@@ -1,0 +1,21 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t mstich/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true mstich/react-test npm test
+
+after_success:
+  - docker build -t mstich/multi-client ./client
+  - docker build -t mstich/multi-nginx ./nginx
+  - docker build -t mstich/multi-server ./server
+  - docker build -t mstich/multi-worker ./worker
+  - echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push mstich/multi-client
+  - docker push mstich/multi-nginx
+  - docker push mstich/multi-server
+  - docker push mstich/multi-worker
